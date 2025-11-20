@@ -48,33 +48,39 @@ async function handler(req: Request): Promise<Response> {
       `[Generate] Model: ${body.model}, Prompt length: ${body.prompt.length}`,
     );
 
-    // Ensure browser is ready
-    await gemini.ensureReady();
+    try {
+      await gemini.ensureReady();
 
-    // Combine system prompt if provided
-    let fullPrompt = body.prompt;
-    if (body.system) {
-      fullPrompt = `${body.system}\n\n${body.prompt}`;
-    }
+      // Combine system prompt if provided
+      let fullPrompt = body.prompt;
+      if (body.system) {
+        fullPrompt = `${body.system}\n\n${body.prompt}`;
+      }
 
-    // Send to Gemini
-    const response = await gemini.sendMessage(fullPrompt);
+      // Send to Gemini
+      const response = await gemini.sendMessage(fullPrompt);
 
-    // Return in Ollama format
-    return new Response(
-      JSON.stringify({
-        model: body.model,
-        created_at: new Date().toISOString(),
-        response: response,
-        done: true,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
+      // Return in Ollama format
+      return new Response(
+        JSON.stringify({
+          model: body.model,
+          created_at: new Date().toISOString(),
+          response: response,
+          done: true,
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
         },
-      },
-    );
+      );
+    } catch (error) {
+      console.error("[Error]", error);
+      return new Response(JSON.stringify({ error: "Generation failed" }), {
+        status: 500,
+      });
+    }
   }
 
   // Ollama chat endpoint
@@ -85,46 +91,47 @@ async function handler(req: Request): Promise<Response> {
       `[Chat] Model: ${body.model}, Messages: ${body.messages.length}`,
     );
 
-    // Ensure browser is ready
-    await gemini.ensureReady();
+    try {
+      await gemini.ensureReady();
 
-    // Convert messages to a single prompt
-    // Extract system message if present
-    const systemMsg = body.messages.find((m) => m.role === "system");
-    const userMessages = body.messages.filter((m) => m.role !== "system");
+      // Convert messages to a single prompt
+      const systemMsg = body.messages.find((m) => m.role === "system");
+      const userMessages = body.messages.filter((m) => m.role !== "system");
 
-    // Build conversation context
-    let fullPrompt = "";
-    if (systemMsg) {
-      fullPrompt = `${systemMsg.content}\n\n`;
-    }
+      let fullPrompt = "";
+      if (systemMsg) {
+        fullPrompt = `${systemMsg.content}\n\n`;
+      }
 
-    // Add conversation history
-    for (const msg of userMessages) {
-      fullPrompt += `${msg.role}: ${msg.content}\n`;
-    }
+      for (const msg of userMessages) {
+        fullPrompt += `${msg.role}: ${msg.content}\n`;
+      }
 
-    // Send to Gemini
-    const response = await gemini.sendMessage(fullPrompt);
+      const response = await gemini.sendMessage(fullPrompt);
 
-    // Return in Ollama format
-    return new Response(
-      JSON.stringify({
-        model: body.model,
-        created_at: new Date().toISOString(),
-        message: {
-          role: "assistant",
-          content: response,
+      return new Response(
+        JSON.stringify({
+          model: body.model,
+          created_at: new Date().toISOString(),
+          message: {
+            role: "assistant",
+            content: response,
+          },
+          done: true,
+        }),
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
         },
-        done: true,
-      }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      },
-    );
+      );
+    } catch (error) {
+      console.error("[Error]", error);
+      return new Response(JSON.stringify({ error: "Chat failed" }), {
+        status: 500,
+      });
+    }
   }
 
   // Ollama models list endpoint
@@ -158,12 +165,19 @@ async function handler(req: Request): Promise<Response> {
     );
   }
 
-  // Ollama show model endpoint
+  // Ollama show model endpoint (RESTORED)
   if (url.pathname === "/api/show" && req.method === "POST") {
-    const body = await req.json();
-    console.log(`[Show] Model: ${body.name}`);
+    // We use a try/catch for body parsing just in case the client sends empty body
+    let modelName = "gemini-browser";
+    try {
+      const body = await req.json();
+      modelName = body.name || modelName;
+    } catch (e) {
+      // ignore json parse error
+    }
 
-    // Return static details for the Gemini model
+    console.log(`[Show] Model: ${modelName}`);
+
     return new Response(
       JSON.stringify({
         license: "Google",
@@ -210,8 +224,8 @@ Deno.addSignalListener("SIGINT", async () => {
 });
 
 console.log("[Server] Starting on http://localhost:11434");
-console.log("[Server] Compatible with Ollama API");
-console.log("[Server] Using Gemini via Playwright\n");
+console.log("[Server] Mode: Remote Debugging (CDP)");
+console.log("[Server] Ensure Chrome is open on port 9222\n");
 
 Deno.serve({
   port: 11434,
