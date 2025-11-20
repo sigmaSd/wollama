@@ -172,7 +172,7 @@ async function handler(req: Request): Promise<Response> {
     try {
       const body = await req.json();
       modelName = body.name || modelName;
-    } catch (e) {
+    } catch {
       // ignore json parse error
     }
 

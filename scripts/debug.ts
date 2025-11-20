@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 // debug-selectors.ts
 import { chromium } from "npm:playwright@1.56.1";
 
@@ -26,7 +27,8 @@ import { chromium } from "npm:playwright@1.56.1";
   console.log("\n--- SCANNING FOR INPUTS ---");
 
   const candidates = await page.evaluate(() => {
-    const inputs = [];
+    // deno-lint-ignore no-explicit-any
+    const inputs: any = [];
 
     // Check for contenteditable divs (often used for rich text)
     document.querySelectorAll('[contenteditable="true"]').forEach((el) => {
@@ -67,7 +69,8 @@ import { chromium } from "npm:playwright@1.56.1";
     );
   } else {
     console.log(`Found ${candidates.length} potential input fields:\n`);
-    candidates.forEach((c, i) => {
+    // deno-lint-ignore no-explicit-any
+    candidates.forEach((c: any, i: any) => {
       console.log(`Candidate #${i + 1}:`);
       console.log(c);
       console.log("--------------------------------");
