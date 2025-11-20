@@ -1,5 +1,4 @@
 // main.ts - Ollama-compatible API server with Gemini backend
-import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { GeminiAdapter } from "./gemini-adapter.ts";
 
 const gemini = new GeminiAdapter();
@@ -185,8 +184,8 @@ console.log("[Server] Starting on http://localhost:11434");
 console.log("[Server] Compatible with Ollama API");
 console.log("[Server] Using Gemini via Playwright\n");
 
-await serve(handler, {
+Deno.serve({
   port: 11434,
   signal: controller.signal,
   onListen: () => console.log("[Server] Ready to accept connections\n"),
-});
+}, handler);

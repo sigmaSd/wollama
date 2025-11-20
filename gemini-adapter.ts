@@ -1,5 +1,5 @@
 // gemini-adapter.ts - Playwright automation for Google Gemini
-import { Browser, chromium, Page } from "npm:playwright";
+import { Browser, chromium, Page } from "npm:playwright@1.56.1";
 
 export class GeminiAdapter {
   private browser: Browser | null = null;
@@ -87,7 +87,7 @@ export class GeminiAdapter {
 
     // Find and click send button
     // Gemini's send button is usually in a button with specific aria-label
-    const sendButton = await this.page.locator(
+    const sendButton = this.page.locator(
       'button[aria-label*="Send message"]',
     ).first();
     await sendButton.click();
@@ -105,7 +105,7 @@ export class GeminiAdapter {
         state: "hidden",
         timeout: 120000, // 2 minutes max
       });
-    } catch (e) {
+    } catch {
       // If stop button wasn't found, continue anyway
       console.log("[Gemini] No stop button found, proceeding...");
     }
