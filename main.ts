@@ -158,6 +158,35 @@ async function handler(req: Request): Promise<Response> {
     );
   }
 
+  // Ollama show model endpoint
+  if (url.pathname === "/api/show" && req.method === "POST") {
+    const body = await req.json();
+    console.log(`[Show] Model: ${body.name}`);
+
+    // Return static details for the Gemini model
+    return new Response(
+      JSON.stringify({
+        license: "Google",
+        modelfile: `FROM gemini-browser\nSYSTEM "You are a helpful assistant."`,
+        parameters: "N/A",
+        template: `{{ .Prompt }}`,
+        details: {
+          format: "browser",
+          family: "gemini",
+          families: ["gemini"],
+          parameter_size: "0B",
+          quantization_level: "browser",
+        },
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      },
+    );
+  }
+
   return new Response(
     JSON.stringify({ error: "Not Found" }),
     {

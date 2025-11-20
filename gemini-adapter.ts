@@ -15,16 +15,20 @@ export class GeminiAdapter {
 
     // Launch browser with persistent context to save login
     this.browser = await chromium.launch({
+      executablePath: "/usr/bin/google-chrome",
       headless: false, // Set to true for production
       args: ["--no-sandbox"],
+      timeout: 0,
     });
 
     this.page = await this.browser.newPage();
+    this.page.setDefaultTimeout(0);
 
     // Navigate to Gemini
     console.log("[Gemini] Navigating to gemini.google.com...");
     await this.page.goto("https://gemini.google.com/app", {
       waitUntil: "networkidle",
+      timeout: 0,
     });
 
     // Wait a bit for any redirects
@@ -39,7 +43,7 @@ export class GeminiAdapter {
 
       // Wait for navigation back to Gemini (max 5 minutes)
       await this.page.waitForURL("**/gemini.google.com/**", {
-        timeout: 300000,
+        timeout: 0,
       });
 
       console.log("[Gemini] ✓ Login successful!");
@@ -53,7 +57,7 @@ export class GeminiAdapter {
     await this.page.waitForSelector(
       'rich-textarea[aria-label*="Enter a prompt"]',
       {
-        timeout: 30000,
+        timeout: 0,
         state: "visible",
       },
     );
@@ -103,7 +107,7 @@ export class GeminiAdapter {
     try {
       await this.page.waitForSelector('button[aria-label*="Stop"]', {
         state: "hidden",
-        timeout: 120000, // 2 minutes max
+        timeout: 0, // 2 minutes max
       });
     } catch {
       // If stop button wasn't found, continue anyway
