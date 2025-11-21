@@ -3,15 +3,16 @@ import { Browser, chromium } from "npm:playwright@1.56.1";
 import { ChildProcess, spawn } from "node:child_process";
 import { createTempDirSync } from "jsr:@david/temp@0.1.1";
 import { rmSync } from "node:fs";
-
 const CDP_URL = "http://localhost:9222";
 
 let chromeProcess: ChildProcess | null = null;
 let launchedByUs = false;
-// TODO: allow user to choose profile
-// unfortunately bun and node don't support using ? (deno does)
-// so we're stuck with manual cleanup
-const tempDir = createTempDirSync();
+let tempDir: string | null = null;
+let useDefaultProfile = false;
+
+export function setUseDefaultProfile(value: boolean) {
+  useDefaultProfile = value;
+}
 
 export async function isPortOpen(): Promise<boolean> {
   try {
@@ -40,8 +41,16 @@ export async function launchChrome(): Promise<void> {
     "--remote-debugging-port=9222",
     "--no-first-run",
     "--no-default-browser-check",
-    `--user-data-dir=${tempDir}`,
   ];
+
+  if (!useDefaultProfile) {
+    // unfortunately bun and node don't support using ? (deno does)
+    // so we're stuck with manual cleanup
+    tempDir = createTempDirSync();
+    args.push(`--user-data-dir=${tempDir}`);
+  } else {
+    console.log("[Browser] Using default Chrome profile");
+  }
 
   for (const chromePath of chromePaths) {
     try {
@@ -88,6 +97,9 @@ export async function closeBrowser(browser: Browser | null): Promise<void> {
     chromeProcess = null;
     launchedByUs = false;
   }
-  // Clean up temp directory
-  rmSync(tempDir.toString(), { recursive: true, force: true });
+  // Only clean up temp directory if we created one
+  if (tempDir) {
+    rmSync(tempDir.toString(), { recursive: true, force: true });
+    tempDir = null;
+  }
 }

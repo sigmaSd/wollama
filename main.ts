@@ -1,7 +1,47 @@
 // main.ts - Ollama-compatible API server with Gemini backend
 import { GeminiAdapter } from "./gemini-adapter.ts";
+import { setUseDefaultProfile } from "./browser.ts";
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import process from "node:process";
+import { parseArgs } from "node:util";
+
+// Parse CLI arguments
+const { values } = parseArgs({
+  args: process.argv.slice(2),
+  options: {
+    "default-profile": {
+      type: "boolean",
+      short: "d",
+      default: false,
+    },
+    help: {
+      type: "boolean",
+      short: "h",
+      default: false,
+    },
+  },
+});
+
+if (values.help) {
+  console.log(`
+Browser AI Proxy - Ollama-compatible API server with Gemini backend
+
+Usage: deno run -A main.ts [options]
+
+Options:
+  -d, --default-profile  Use Chrome's default profile (your logged-in account)
+  -h, --help             Show this help message
+
+Examples:
+  deno run -A main.ts                    # Use temporary profile
+  deno run -A main.ts --default-profile  # Use your Chrome account
+  deno run -A main.ts -d                 # Short form
+`);
+  process.exit(0);
+}
+
+// Configure browser profile
+setUseDefaultProfile(values["default-profile"] ?? false);
 
 const gemini = new GeminiAdapter();
 
@@ -206,6 +246,11 @@ process.on("SIGTERM", shutdown);
 
 console.log("[Server] Starting on http://localhost:11434");
 console.log("[Server] Mode: Remote Debugging (CDP)");
+console.log(
+  `[Server] Profile: ${
+    values["default-profile"] ? "Default Chrome profile" : "Temporary profile"
+  }`,
+);
 console.log("[Server] Ensure Chrome is open on port 9222\n");
 
 server.listen(11434, () => {
