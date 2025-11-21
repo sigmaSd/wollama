@@ -24,7 +24,7 @@ const { values } = parseArgs({
 
 if (values.help) {
   console.log(`
-Browser AI Proxy - Ollama-compatible API server with Gemini backend
+Wollama - Web + Ollama
 
 Usage: deno run -A main.ts [options]
 
@@ -99,7 +99,7 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   // Health check
   if (url.pathname === "/") {
     res.writeHead(200);
-    res.end("Browser AI Proxy - Running");
+    res.end("Wollama - Running");
     return;
   }
 
