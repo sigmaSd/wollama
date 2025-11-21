@@ -46,7 +46,7 @@ command line, IDE plugins, and local scripts.
 Wollama uses the **Adapter Design Pattern** to standardize the chaotic world of
 DOM manipulation into a clean API.
 
-1. **The Server:** A Deno-based HTTP server listening on port `11434`.
+1. **The Server:** An HTTP server listening on port `11434`.
 2. **The Interface:** It mimics the Ollama API (`/api/generate`, `/api/chat`),
    so existing clients (like `ollama run` or VS Code extensions) work out of the
    box.
@@ -69,7 +69,9 @@ Ensure you are logged into gemini.google.com (or your target platform).
 
 Start the proxy server:
 
-Bash deno run --allow-net --allow-read --allow-run main.ts
+```
+deno run -A jsr:@sigmasd/wollama # or npx xjsr @sigmasd/wollama or bunx xjsr @sigmasd/wollama
+```
 
 3. Usage
 
