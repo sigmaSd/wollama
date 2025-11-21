@@ -1,5 +1,23 @@
 # Wollama
 
+**⚠️ DISCLAIMER: FOR EDUCATIONAL PURPOSES ONLY** This project automates browser
+interactions with Google Gemini's web interface (other models planned). **This
+likely violates Google's (and others) Terms of Service**, which prohibit
+automated access, scraping, and circumventing access controls.
+
+Using this tool may result in:
+
+- Account suspension or permanent ban
+- IP blocking
+- Legal action from Google
+
+**Do not use this for production, commercial purposes, or any activity that
+could harm others.** If you need programmatic access to Gemini, use the
+[official Gemini API](https://ai.google.dev/) which has a generous free tier.
+
+The authors are not responsible for any consequences resulting from the use of
+this software.
+
 **Turn your browser into a local AI server.**
 
 **Wollama** (Web + Ollama) is a bridge that exposes web-based LLM interfaces as
