@@ -100,7 +100,11 @@ export async function closeBrowser(browser: Browser | null): Promise<void> {
 
   // Only clean up temp directory if we created one
   if (tempDir) {
-    rmSync(tempDir, { recursive: true, force: true });
+    try {
+      rmSync(tempDir, { recursive: true, force: true });
+    } catch {
+      // FIXME: somehow this fails in node/bun with directory not empty
+    }
     tempDir = null;
   }
 }
