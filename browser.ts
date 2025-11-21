@@ -1,13 +1,13 @@
 // browser.ts - Chrome browser management utilities
 import { Browser, chromium } from "npm:playwright@1.56.1";
 import { ChildProcess, spawn } from "node:child_process";
-import { createTempDirSync } from "jsr:@david/temp@0.1.1";
+import { createTempDirSync, TempDir } from "jsr:@david/temp@0.1.1";
 import { rmSync } from "node:fs";
 const CDP_URL = "http://localhost:9222";
 
 let chromeProcess: ChildProcess | null = null;
 let launchedByUs = false;
-let tempDir: string | null = null;
+let tempDir: TempDir | null = null;
 let useDefaultProfile = false;
 
 export function setUseDefaultProfile(value: boolean) {
