@@ -59,7 +59,7 @@ DOM manipulation into a clean API.
 
 ## Getting Started
 
-1. Prepare Chrome Start Chrome with remote debugging enabled on port 9222:
+1. Prepare Chrome Start Chrome with remote debugging enabled on port 9222: (this step is optional)
 
 ```bash
 google-chrome --remote-debugging-port=9222
@@ -79,9 +79,11 @@ deno run -A jsr:@sigmasd/wollama # or npx xjsr @sigmasd/wollama or bunx xjsr @si
 
 Interact with it just like a local Ollama model:
 
-Bash curl -X POST http://localhost:11434/api/generate -d '{ "model":
+```Bash
+curl -X POST http://localhost:11434/api/generate -d '{ "model":
 "gemini-browser", "prompt": "Write a haiku about browser automation.", "stream":
 false }'
+```
 
 ## Contributing
 
