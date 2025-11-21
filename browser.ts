@@ -2,13 +2,16 @@
 import { Browser, chromium } from "npm:playwright@1.56.1";
 import { ChildProcess, spawn } from "node:child_process";
 import { createTempDirSync } from "jsr:@david/temp@0.1.1";
+import { rmSync } from "node:fs";
 
 const CDP_URL = "http://localhost:9222";
 
 let chromeProcess: ChildProcess | null = null;
 let launchedByUs = false;
 // TODO: allow user to choose profile
-using tempDir = createTempDirSync();
+// unfortunately bun and node don't support using ? (deno does)
+// so we're stuck with manual cleanup
+const tempDir = createTempDirSync();
 
 export async function isPortOpen(): Promise<boolean> {
   try {
@@ -71,7 +74,6 @@ export async function ensureBrowser(): Promise<Browser> {
   if (!(await isPortOpen())) {
     await launchChrome();
   }
-
   console.log(`[Browser] Connecting to Chrome at ${CDP_URL}...`);
   return chromium.connectOverCDP(CDP_URL);
 }
@@ -86,4 +88,6 @@ export async function closeBrowser(browser: Browser | null): Promise<void> {
     chromeProcess = null;
     launchedByUs = false;
   }
+  // Clean up temp directory
+  rmSync(tempDir.toString(), { recursive: true, force: true });
 }
