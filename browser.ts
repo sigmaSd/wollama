@@ -1,13 +1,14 @@
 // browser.ts - Chrome browser management utilities
 import { Browser, chromium } from "npm:playwright@1.56.1";
 import { ChildProcess, spawn } from "node:child_process";
-import { createTempDirSync, TempDir } from "jsr:@david/temp@0.1.1";
-import { rmSync } from "node:fs";
-const CDP_URL = "http://localhost:9222";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
+const CDP_URL = "http://localhost:9222";
 let chromeProcess: ChildProcess | null = null;
 let launchedByUs = false;
-let tempDir: TempDir | null = null;
+let tempDir: string | null = null;
 let useDefaultProfile = false;
 
 export function setUseDefaultProfile(value: boolean) {
@@ -44,9 +45,7 @@ export async function launchChrome(): Promise<void> {
   ];
 
   if (!useDefaultProfile) {
-    // unfortunately bun and node don't support using ? (deno does)
-    // so we're stuck with manual cleanup
-    tempDir = createTempDirSync();
+    tempDir = mkdtempSync(join(tmpdir(), "chrome-"));
     args.push(`--user-data-dir=${tempDir}`);
   } else {
     console.log("[Browser] Using default Chrome profile");
@@ -91,15 +90,17 @@ export async function closeBrowser(browser: Browser | null): Promise<void> {
   if (browser) {
     await browser.close();
   }
+
   if (launchedByUs && chromeProcess) {
     console.log("[Browser] Closing Chrome instance...");
     chromeProcess.kill();
     chromeProcess = null;
     launchedByUs = false;
   }
+
   // Only clean up temp directory if we created one
   if (tempDir) {
-    rmSync(tempDir.toString(), { recursive: true, force: true });
+    rmSync(tempDir, { recursive: true, force: true });
     tempDir = null;
   }
 }
