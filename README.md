@@ -20,6 +20,8 @@ this software.
 
 **Turn your browser into a local AI server.**
 
+[Screencast From 2025-11-21 22-57-19.webm](https://github.com/user-attachments/assets/b77afb9a-6802-49bc-ab94-d0b3cde5172f)
+
 **Wollama** (Web + Ollama) is a bridge that exposes web-based LLM interfaces as
 standard local APIs.
 
