@@ -67,7 +67,6 @@ export class GeminiAdapter {
     if (!this.page) throw new Error("Browser not initialized");
 
     console.log(`[Gemini] Sending message (${prompt.length} chars)...`);
-    await this.page.bringToFront();
 
     // UPDATED SELECTOR based on your debug output
     const inputSelector = 'div[role="textbox"][aria-label*="Enter a prompt"]';
