@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 // gemini-adapter.ts - Playwright automation for Google Gemini
 import { Browser, BrowserContext, Page } from "npm:playwright@1.56.1";
 import { closeBrowser, ensureBrowser } from "./browser.ts";
