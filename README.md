@@ -59,7 +59,8 @@ DOM manipulation into a clean API.
 
 ## Getting Started
 
-1. Prepare Chrome Start Chrome with remote debugging enabled on port 9222: (this step is optional)
+1. Prepare Chrome Start Chrome with remote debugging enabled on port 9222: (this
+   step is optional)
 
 ```bash
 google-chrome --remote-debugging-port=9222

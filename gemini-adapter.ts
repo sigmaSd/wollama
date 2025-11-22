@@ -85,12 +85,161 @@ export class GeminiAdapter {
     }
 
     const lastResponse = responses[responses.length - 1];
-    const responseText = await lastResponse.innerText();
+    const responseText = await this.extractFormattedResponse(lastResponse);
 
     console.log(
       `[Gemini] ✓ Response received (${responseText.length} chars)\n`,
     );
     return responseText;
+  }
+
+  private async extractFormattedResponse(
+    // deno-lint-ignore no-explicit-any
+    responseElement: any,
+  ): Promise<string> {
+    // Extract the response with proper markdown formatting for code blocks
+    return await responseElement.evaluate((el: HTMLElement) => {
+      const result: string[] = [];
+      const container = el.querySelector(".markdown");
+      if (!container) return el.innerText;
+
+      // Language mapping for common labels
+      const langMap: Record<string, string> = {
+        "code snippet": "",
+        "bash": "bash",
+        "shell": "bash",
+        "python": "python",
+        "javascript": "javascript",
+        "typescript": "typescript",
+        "json": "json",
+        "html": "html",
+        "css": "css",
+        "sql": "sql",
+        "java": "java",
+        "c++": "cpp",
+        "c": "c",
+        "go": "go",
+        "rust": "rust",
+        "ruby": "ruby",
+        "php": "php",
+        "yaml": "yaml",
+        "xml": "xml",
+        "markdown": "markdown",
+      };
+
+      function processNode(node: Node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent || "";
+          if (text.trim()) result.push(text);
+          return;
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        const elem = node as HTMLElement;
+        const tag = elem.tagName.toLowerCase();
+
+        // Handle code blocks
+        if (tag === "code-block") {
+          const langSpan = elem.querySelector(".code-block-decoration span");
+          const codeEl = elem.querySelector(
+            'code[data-test-id="code-content"]',
+          );
+
+          if (codeEl) {
+            const rawLang = langSpan?.textContent?.trim().toLowerCase() || "";
+            const lang = langMap[rawLang] ?? rawLang;
+            const code = codeEl.textContent || "";
+
+            result.push(`\n\`\`\`${lang}\n${code.trim()}\n\`\`\`\n`);
+          }
+          return;
+        }
+
+        // Handle inline code
+        if (tag === "code" && !elem.closest("code-block")) {
+          result.push(`\`${elem.textContent}\``);
+          return;
+        }
+
+        // Handle headers
+        if (tag === "h1") {
+          result.push(`\n# ${elem.textContent}\n`);
+          return;
+        }
+        if (tag === "h2") {
+          result.push(`\n## ${elem.textContent}\n`);
+          return;
+        }
+        if (tag === "h3") {
+          result.push(`\n### ${elem.textContent}\n`);
+          return;
+        }
+
+        // Handle paragraphs
+        if (tag === "p") {
+          const parts: string[] = [];
+          // @ts-ignore works
+          for (const child of elem.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE) {
+              parts.push(child.textContent || "");
+            } else if (child.nodeType === Node.ELEMENT_NODE) {
+              const childEl = child as HTMLElement;
+              const childTag = childEl.tagName.toLowerCase();
+              if (childTag === "code") {
+                parts.push(`\`${childEl.textContent}\``);
+              } else if (childTag === "b" || childTag === "strong") {
+                parts.push(`**${childEl.textContent}**`);
+              } else if (childTag === "i" || childTag === "em") {
+                parts.push(`*${childEl.textContent}*`);
+              } else {
+                parts.push(childEl.textContent || "");
+              }
+            }
+          }
+          result.push(parts.join("") + "\n\n");
+          return;
+        }
+
+        // Handle lists
+        if (tag === "ul" || tag === "ol") {
+          const items = elem.querySelectorAll(":scope > li");
+          items.forEach((li, i) => {
+            const prefix = tag === "ol" ? `${i + 1}. ` : "- ";
+            result.push(prefix + li.textContent?.trim() + "\n");
+          });
+          result.push("\n");
+          return;
+        }
+
+        // Handle horizontal rules
+        if (tag === "hr") {
+          result.push("\n---\n");
+          return;
+        }
+
+        // Skip response-element wrappers, process children
+        if (tag === "response-element") {
+          // @ts-ignore works
+          for (const child of elem.children) {
+            processNode(child);
+          }
+          return;
+        }
+
+        // Default: recurse into children
+        // @ts-ignore works
+        for (const child of elem.childNodes) {
+          processNode(child);
+        }
+      }
+
+      // @ts-ignore works
+      for (const child of container.childNodes) {
+        processNode(child);
+      }
+
+      return result.join("").trim();
+    });
   }
 
   async close() {
