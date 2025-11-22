@@ -1,4 +1,3 @@
-/// <reference lib="dom" />
 // gemini-adapter.ts - Playwright automation for Google Gemini
 import { Browser, BrowserContext, Page } from "npm:playwright@1.56.1";
 import { closeBrowser, ensureBrowser } from "./browser.ts";
@@ -17,7 +16,8 @@ turndown.addRule("geminiCodeBlock", {
   filter: (node: any) => node.nodeName.toLowerCase() === "code-block",
   // deno-lint-ignore no-explicit-any
   replacement: (_content: any, node: any) => {
-    const el = node as HTMLElement;
+    // deno-lint-ignore no-explicit-any
+    const el = node as any;
     const langSpan = el.querySelector(".code-block-decoration span");
     const codeEl = el.querySelector('code[data-test-id="code-content"]');
 
@@ -122,7 +122,8 @@ export class GeminiAdapter {
     const lastResponse = responses[responses.length - 1];
 
     // Get the HTML and convert to markdown
-    const html = await lastResponse.evaluate((el: HTMLElement) => {
+    // deno-lint-ignore no-explicit-any
+    const html = await lastResponse.evaluate((el: any) => {
       const markdown = el.querySelector(".markdown");
       return markdown?.innerHTML || el.innerHTML;
     });
