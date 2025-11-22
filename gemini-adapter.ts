@@ -12,8 +12,10 @@ const turndown = new TurndownService({
 
 // Custom rule for Gemini's <code-block> elements
 turndown.addRule("geminiCodeBlock", {
-  filter: (node) => node.nodeName.toLowerCase() === "code-block",
-  replacement: (_content, node) => {
+  // deno-lint-ignore no-explicit-any
+  filter: (node: any) => node.nodeName.toLowerCase() === "code-block",
+  // deno-lint-ignore no-explicit-any
+  replacement: (_content: any, node: any) => {
     const el = node as HTMLElement;
     const langSpan = el.querySelector(".code-block-decoration span");
     const codeEl = el.querySelector('code[data-test-id="code-content"]');
@@ -28,8 +30,10 @@ turndown.addRule("geminiCodeBlock", {
 
 // Skip the response-element wrapper
 turndown.addRule("responseElement", {
-  filter: (node) => node.nodeName.toLowerCase() === "response-element",
-  replacement: (content) => content,
+  // deno-lint-ignore no-explicit-any
+  filter: (node: any) => node.nodeName.toLowerCase() === "response-element",
+  // deno-lint-ignore no-explicit-any
+  replacement: (content: any) => content,
 });
 
 export class GeminiAdapter {
