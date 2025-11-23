@@ -1,19 +1,23 @@
 # Wollama
 
 **⚠️ DISCLAIMER: FOR EDUCATIONAL PURPOSES ONLY** This project automates browser
-interactions with Google Gemini's web interface (other models planned). **This
-likely violates Google's (and others) Terms of Service**, which prohibit
-automated access, scraping, and circumventing access controls.
+interactions with web-based LLM interfaces. **This likely violates the Terms of
+Service** of various AI providers (Google, OpenAI, Anthropic, etc.), which
+prohibit automated access, scraping, and circumventing access controls.
 
 Using this tool may result in:
 
 - Account suspension or permanent ban
 - IP blocking
-- Legal action from Google
+- Legal action from service providers
 
 **Do not use this for production, commercial purposes, or any activity that
-could harm others.** If you need programmatic access to Gemini, use the
-[official Gemini API](https://ai.google.dev/) which has a generous free tier.
+could harm others.** If you need programmatic access to these models, use their
+official APIs:
+
+- [Gemini API](https://ai.google.dev/) (generous free tier)
+- [OpenAI API](https://platform.openai.com/)
+- [Anthropic API](https://www.anthropic.com/)
 
 The authors are not responsible for any consequences resulting from the use of
 this software.
@@ -25,10 +29,10 @@ this software.
 **Wollama** (Web + Ollama) is a bridge that exposes web-based LLM interfaces as
 standard local APIs.
 
-While it currently powers the **Gemini** experience, Wollama is architected to
-be model-agnostic. It acts as a universal adapter layer, allowing you to control
-_any_ web-based chat interface (like ChatGPT, Claude, or Le Chat) using standard
-tools designed for [Ollama](https://ollama.com).
+Wollama is architected to be model-agnostic. It acts as a universal adapter
+layer, allowing you to control _any_ web-based chat interface (like ChatGPT,
+Gemini, Claude, or Le Chat) using standard tools designed for
+[Ollama](https://ollama.com).
 
 ## Mission
 
@@ -37,11 +41,12 @@ command line, IDE plugins, and local scripts.
 
 ## Current Support
 
-| Adapter     | Status    | Description                                 |
-| :---------- | :-------- | :------------------------------------------ |
-| **Gemini**  | **Ready** | Full support via the `GeminiAdapter` class. |
-| **ChatGPT** | _Planned_ | Architecture ready for implementation.      |
-| **Claude**  | _Planned_ | Future support for anthropic.com.           |
+| Adapter     | Status    | Description                                  |
+| :---------- | :-------- | :------------------------------------------- |
+| **Gemini**  | **Ready** | Full support via the `GeminiAdapter` class.  |
+| **ChatGPT** | **Ready** | Full support via the `ChatGPTAdapter` class. |
+| **Claude**  | _Planned_ | Future support for anthropic.com.            |
+| **Le Chat** | _Planned_ | Future support for Mistral AI.               |
 
 ## Under the Hood
 
@@ -54,8 +59,10 @@ DOM manipulation into a clean API.
    box.
 3. **The Backend:** Instead of running a heavy model file locally, it sends
    instructions to a **Browser Adapter**.
-4. **The Adapter:** (Currently `GeminiAdapter`) Uses **Playwright** to drive a
-   live Chrome session, typing prompts and scraping responses in real-time.
+4. **The Adapter:** Uses **Playwright** to drive a live Chrome session, typing
+   prompts and scraping responses in real-time.
+   - `GeminiAdapter`: Automates gemini.google.com
+   - `ChatGPTAdapter`: Automates chatgpt.com with proper code block handling
 
 ## Getting Started
 
@@ -66,29 +73,65 @@ DOM manipulation into a clean API.
 google-chrome --remote-debugging-port=9222
 ```
 
-Ensure you are logged into gemini.google.com (or your target platform).
+Ensure you are logged into your target platform (gemini.google.com or
+chatgpt.com).
 
 2. Run Wollama
 
 Start the proxy server:
 
-```
-deno run -A jsr:@sigmasd/wollama # or npx xjsr @sigmasd/wollama or bunx xjsr @sigmasd/wollama
+```bash
+deno run -A jsr:@sigmasd/wollama
+# or
+npx xjsr @sigmasd/wollama
+# or
+bunx xjsr @sigmasd/wollama
 ```
 
 3. Usage
 
 Interact with it just like a local Ollama model:
 
-```Bash
-curl -X POST http://localhost:11434/api/generate -d '{ "model":
-"gemini-browser", "prompt": "Write a haiku about browser automation.", "stream":
-false }'
+**For Gemini:**
+
+```bash
+curl -X POST http://localhost:11434/api/generate -d '{
+  "model": "gemini-browser",
+  "prompt": "Write a haiku about browser automation.",
+  "stream": false
+}'
 ```
+
+**For ChatGPT:**
+
+```bash
+curl -X POST http://localhost:11434/api/generate -d '{
+  "model": "chatgpt-browser",
+  "prompt": "Explain the adapter pattern in software design.",
+  "stream": false
+}'
+```
+
+## Features
+
+- **Multi-Model Support:** Switch between Gemini and ChatGPT by changing the
+  model name
+- **Markdown Conversion:** Responses are converted to clean markdown with proper
+  code block formatting
+- **Ollama Compatible:** Works with any tool that supports Ollama's API
+- **Automatic Tab Detection:** Finds existing browser tabs or creates new ones
 
 ## Contributing
 
-We welcome contributions! If you want to add support for ChatGPT or Claude,
+We welcome contributions! If you want to add support for Claude or other models,
 simply implement the Adapter interface and plug it into the main router.
 
-Readme created by the gemini-browser model.
+### Adding a New Adapter
+
+1. Create a new file: `your-model-adapter.ts`
+2. Implement the adapter interface with `ensureReady()`, `sendMessage()`, and
+   `close()` methods
+3. Handle DOM-specific selectors for your target platform
+4. Add the adapter to the router in the main server file
+
+Readme created by the gemini-browser model and updated for ChatGPT support.

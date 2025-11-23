@@ -1,5 +1,6 @@
-// main.ts - Ollama-compatible API server with Gemini backend
+// main.ts - Ollama-compatible API server with Gemini/ChatGPT backend
 import { GeminiAdapter } from "./gemini-adapter.ts";
+import { ChatGPTAdapter } from "./chatgpt-adapter.ts";
 import { setUseDefaultProfile } from "./browser.ts";
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import process from "node:process";
@@ -43,7 +44,12 @@ Examples:
 // Configure browser profile
 setUseDefaultProfile(values["default-profile"] ?? false);
 
-const gemini = new GeminiAdapter();
+// Initialize both adapters and map them by model name
+const adapters = {
+  "gemini-browser": new GeminiAdapter(),
+  "chatgpt-browser": new ChatGPTAdapter(),
+};
+type Adapter = GeminiAdapter | ChatGPTAdapter;
 
 interface OllamaGenerateRequest {
   model: string;
@@ -79,6 +85,14 @@ function sendJson(res: ServerResponse, data: object, status = 200) {
   res.end(JSON.stringify(data));
 }
 
+// Helper function to get the correct adapter
+function getAdapter(modelName: string): Adapter | null {
+  // deno-lint-ignore no-explicit-any
+  const adapter = (adapters as any)[modelName];
+  if (adapter) return adapter as Adapter;
+  return null;
+}
+
 async function handler(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
   const method = req.method || "GET";
@@ -106,20 +120,26 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   // Ollama generate endpoint
   if (url.pathname === "/api/generate" && method === "POST") {
     const body: OllamaGenerateRequest = JSON.parse(await parseBody(req));
+    const adapter = getAdapter(body.model);
 
     console.log(
       `[Generate] Model: ${body.model}, Prompt length: ${body.prompt.length}`,
     );
 
+    if (!adapter) {
+      sendJson(res, { error: `Model not supported: ${body.model}` }, 404);
+      return;
+    }
+
     try {
-      await gemini.ensureReady();
+      await adapter.ensureReady();
 
       let fullPrompt = body.prompt;
       if (body.system) {
         fullPrompt = `${body.system}\n\n${body.prompt}`;
       }
 
-      const response = await gemini.sendMessage(fullPrompt);
+      const response = await adapter.sendMessage(fullPrompt);
 
       sendJson(res, {
         model: body.model,
@@ -137,13 +157,19 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   // Ollama chat endpoint
   if (url.pathname === "/api/chat" && method === "POST") {
     const body: OllamaChatRequest = JSON.parse(await parseBody(req));
+    const adapter = getAdapter(body.model);
 
     console.log(
       `[Chat] Model: ${body.model}, Messages: ${body.messages.length}`,
     );
 
+    if (!adapter) {
+      sendJson(res, { error: `Model not supported: ${body.model}` }, 404);
+      return;
+    }
+
     try {
-      await gemini.ensureReady();
+      await adapter.ensureReady();
 
       const systemMsg = body.messages.find((m) => m.role === "system");
       const userMessages = body.messages.filter((m) => m.role !== "system");
@@ -157,7 +183,7 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
         fullPrompt += `${msg.role}: ${msg.content}\n`;
       }
 
-      const response = await gemini.sendMessage(fullPrompt);
+      const response = await adapter.sendMessage(fullPrompt);
 
       sendJson(res, {
         model: body.model,
@@ -194,6 +220,20 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
             quantization_level: "browser",
           },
         },
+        {
+          name: "chatgpt-browser",
+          model: "chatgpt-browser",
+          modified_at: new Date().toISOString(),
+          size: 0,
+          digest: "sha256:chatgpt",
+          details: {
+            format: "browser",
+            family: "chatgpt",
+            families: ["chatgpt"],
+            parameter_size: "0B",
+            quantization_level: "browser",
+          },
+        },
       ],
     });
     return;
@@ -211,15 +251,19 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
 
     console.log(`[Show] Model: ${modelName}`);
 
+    // Determine model family for response details
+    const isChatGPT = modelName.includes("chatgpt");
+    const family = isChatGPT ? "chatgpt" : "gemini";
+
     sendJson(res, {
-      license: "Google",
-      modelfile: `FROM gemini-browser\nSYSTEM "You are a helpful assistant."`,
+      license: isChatGPT ? "OpenAI" : "Google",
+      modelfile: `FROM ${modelName}\nSYSTEM "You are a helpful assistant."`,
       parameters: "N/A",
       template: `{{ .Prompt }}`,
       details: {
         format: "browser",
-        family: "gemini",
-        families: ["gemini"],
+        family: family,
+        families: [family],
         parameter_size: "0B",
         quantization_level: "browser",
       },
@@ -236,7 +280,11 @@ const server = createServer(handler);
 // Graceful shutdown
 async function shutdown() {
   console.log("\n[Server] Shutting down...");
-  await gemini.close();
+  // Close all adapters
+  for (const key in adapters) {
+    // deno-lint-ignore no-explicit-any
+    await (adapters as any)[key].close();
+  }
   server.close();
   process.exit(0);
 }
