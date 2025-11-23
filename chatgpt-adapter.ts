@@ -14,8 +14,10 @@ const turndown = new TurndownService({
 // The DOM shows code blocks are <pre> containing a header (language) + button + code
 turndown.addRule("chatgptCodeBlock", {
   filter: "pre",
-  replacement: (_content: string, node: Node) => {
-    const el = node as HTMLElement;
+  // deno-lint-ignore no-explicit-any
+  replacement: (_content: string, node: any) => {
+    // deno-lint-ignore no-explicit-any
+    const el = node as any;
 
     // 1. Try to find the language. In your DOM it's often in a div with text-xs
     // e.g. <div class="... text-xs ...">javascript</div>
