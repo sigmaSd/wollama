@@ -112,6 +112,50 @@ curl -X POST http://localhost:11434/api/generate -d '{
 }'
 ```
 
+## Gemini Chat CLI
+
+Wollama also includes a standalone CLI tool for Gemini that supports file
+uploads (OCR, PDF analysis, images) and parallel execution.
+
+### Usage
+
+Run it directly via JSR:
+
+```bash
+deno run -A jsr:@sigmasd/wollama/gemini/chat "Explain this document" -f ./doc.pdf
+```
+
+### Options
+
+| Option      | Short | Description                                       |
+| :---------- | :---- | :------------------------------------------------ |
+| `--prompt`  | `-p`  | The text prompt (default: "Hello")                |
+| `--file`    | `-f`  | File(s) to upload (can be used multiple times)    |
+| `--quiet`   | `-q`  | Only output the model response (clean output)     |
+| `--new-tab` | `-n`  | Open a new tab instead of reusing an existing one |
+| `--port`    |       | Browser remote debugging port (default: 9222)     |
+
+### Examples
+
+**OCR and Analysis:**
+
+```bash
+deno run -A jsr:@sigmasd/wollama/gemini/chat "OCR this and return text" -f document.pdf
+```
+
+**Clean output for piping:**
+
+```bash
+deno run -A jsr:@sigmasd/wollama/gemini/chat -q "Summarize" -f data.csv > summary.md
+```
+
+**Parallel execution (Isolated tabs):**
+
+```bash
+deno run -A jsr:@sigmasd/wollama/gemini/chat -n "Task 1" &
+deno run -A jsr:@sigmasd/wollama/gemini/chat -n "Task 2" &
+```
+
 ## Features
 
 - **Multi-Model Support:** Switch between Gemini and ChatGPT by changing the

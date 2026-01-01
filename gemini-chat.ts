@@ -40,9 +40,12 @@ if (values.quiet) {
 
 if (values.help) {
   process.stdout.write(`
-Gemini Chat Tool
+Gemini Chat Tool (Wollama)
 
-Usage: deno run -A scripts/chat.ts [options] [prompt] [files...]
+Usage: 
+  deno run -A jsr:@sigmasd/wollama/gemini/chat [options] [prompt] [files...]
+  # or
+  deno run -A gemini-chat.ts [options] [prompt] [files...]
 
 Options:
   -p, --prompt <text>   The prompt to send (default: "Hello")
@@ -53,10 +56,10 @@ Options:
   -h, --help            Show this help message
 
 Examples:
-  deno run -A scripts/chat.ts "How are you?"
-  deno run -A scripts/chat.ts -n "Start a fresh chat"
-  deno run -A scripts/chat.ts --port 9223 "Isolated browser instance"
-  deno run -A scripts/chat.ts -f ./image.png "What is in this image?"
+  deno run -A gemini-chat.ts "How are you?"
+  deno run -A gemini-chat.ts -n "Start a fresh chat"
+  deno run -A gemini-chat.ts --port 9223 "Isolated browser instance"
+  deno run -A gemini-chat.ts -f ./image.png "What is in this image?"
 `);
   process.exit(0);
 }
