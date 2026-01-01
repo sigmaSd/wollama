@@ -81,8 +81,35 @@ export class GeminiAdapter {
     this.isReady = true;
   }
 
-  async sendMessage(prompt: string): Promise<string> {
+  async sendMessage(prompt: string, files: string[] = []): Promise<string> {
     if (!this.page) throw new Error("Browser not initialized");
+
+    if (files.length > 0) {
+      console.log(`[Gemini] Uploading ${files.length} files...`);
+
+      // 1. Click the plus button to open the menu
+      const plusButton = this.page.locator(
+        'button[aria-label="Open upload file menu"]',
+      );
+      await plusButton.click();
+
+      // 2. Wait for the menu to appear and finding the upload button
+      // Using the user-provided test-id for precision
+      const uploadButton = this.page.locator(
+        'button[data-test-id="local-images-files-uploader-button"]',
+      );
+      await uploadButton.waitFor({ state: "visible" });
+
+      // 3. Prepare for file chooser and click the upload button
+      const fileChooserPromise = this.page.waitForEvent("filechooser");
+      await uploadButton.click();
+      const fileChooser = await fileChooserPromise;
+
+      // 4. Set the files
+      await fileChooser.setFiles(files);
+
+      await this.page.waitForTimeout(5000); // Wait for upload to process (increased to 5s)
+    }
 
     console.log(`[Gemini] Sending message (${prompt.length} chars)...`);
 
