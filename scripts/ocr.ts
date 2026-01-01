@@ -19,12 +19,20 @@ const { values, positionals } = parseArgs({
       type: "boolean",
       short: "h",
     },
+    quiet: {
+      type: "boolean",
+      short: "q",
+    },
   },
   allowPositionals: true,
 });
 
+if (values.quiet) {
+  console.log = () => {};
+}
+
 if (values.help) {
-  console.log(`
+  process.stdout.write(`
 Gemini OCR Tool
 
 Usage: deno run -A scripts/ocr.ts [options] [prompt] [files...]
@@ -32,10 +40,12 @@ Usage: deno run -A scripts/ocr.ts [options] [prompt] [files...]
 Options:
   -p, --prompt <text>   The prompt to send (default: "OCR this file and return the text")
   -f, --file <path>     File(s) to upload (can be used multiple times)
+  -q, --quiet           Only output the model response
   -h, --help            Show this help message
 
 Examples:
   deno run -A scripts/ocr.ts -f ./doc.pdf
+  deno run -A scripts/ocr.ts -q -f ./doc.pdf > output.md
   deno run -A scripts/ocr.ts "Summarize this" ./doc.pdf
 `);
   process.exit(0);
@@ -62,8 +72,8 @@ if (!values.prompt && positionals.length > 0) {
 files.push(...positionals.slice(startPos));
 
 if (files.length === 0) {
-  console.error(
-    "Error: No files provided. Use -f or pass file paths as arguments.",
+  process.stderr.write(
+    "Error: No files provided. Use -f or pass file paths as arguments.\n",
   );
   process.exit(1);
 }
@@ -79,10 +89,14 @@ const adapter = new GeminiAdapter();
 try {
   await adapter.ensureReady();
   const response = await adapter.sendMessage(prompt, absFiles);
-  console.log("\n--- Response ---\n");
-  console.log(response);
+  if (values.quiet) {
+    process.stdout.write(response + "\n");
+  } else {
+    process.stdout.write("\n--- Response ---\n\n");
+    process.stdout.write(response + "\n");
+  }
 } catch (error) {
-  console.error("Error:", error);
+  process.stderr.write(`Error: ${error}\n`);
   process.exit(1);
 } finally {
   await adapter.close();
