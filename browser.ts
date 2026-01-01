@@ -5,7 +5,6 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const CDP_URL = "http://localhost:9222";
 let chromeProcess: ChildProcess | null = null;
 let launchedByUs = false;
 let tempDir: string | null = null;
@@ -15,17 +14,17 @@ export function setUseDefaultProfile(value: boolean) {
   useDefaultProfile = value;
 }
 
-export async function isPortOpen(): Promise<boolean> {
+export async function isPortOpen(port = 9222): Promise<boolean> {
   try {
-    const res = await fetch(`${CDP_URL}/json/version`);
+    const res = await fetch(`http://localhost:${port}/json/version`);
     return res.ok;
   } catch {
     return false;
   }
 }
 
-export async function launchChrome(): Promise<void> {
-  console.log("[Browser] Chrome not found, launching with remote debugging...");
+export async function launchChrome(port = 9222): Promise<void> {
+  console.log(`[Browser] Chrome not found on port ${port}, launching...`);
 
   const chromePaths = [
     "google-chrome",
@@ -39,13 +38,13 @@ export async function launchChrome(): Promise<void> {
   ];
 
   const args = [
-    "--remote-debugging-port=9222",
+    `--remote-debugging-port=${port}`,
     "--no-first-run",
     "--no-default-browser-check",
   ];
 
   if (!useDefaultProfile) {
-    tempDir = mkdtempSync(join(tmpdir(), "chrome-"));
+    tempDir = mkdtempSync(join(tmpdir(), `chrome-${port}-`));
     args.push(`--user-data-dir=${tempDir}`);
   } else {
     console.log("[Browser] Using default Chrome profile");
@@ -60,8 +59,10 @@ export async function launchChrome(): Promise<void> {
 
       for (let i = 0; i < 30; i++) {
         await new Promise((r) => setTimeout(r, 500));
-        if (await isPortOpen()) {
-          console.log(`[Browser] ✓ Chrome launched (${chromePath})\n`);
+        if (await isPortOpen(port)) {
+          console.log(
+            `[Browser] ✓ Chrome launched (${chromePath}) on port ${port}\n`,
+          );
           launchedByUs = true;
           return;
         }
@@ -73,17 +74,17 @@ export async function launchChrome(): Promise<void> {
   }
 
   throw new Error(
-    "Could not launch Chrome. Please start it manually with:\n" +
-      "  google-chrome --remote-debugging-port=9222",
+    `Could not launch Chrome. Please start it manually with:\n` +
+      `  google-chrome --remote-debugging-port=${port}`,
   );
 }
 
-export async function ensureBrowser(): Promise<Browser> {
-  if (!(await isPortOpen())) {
-    await launchChrome();
+export async function ensureBrowser(port = 9222): Promise<Browser> {
+  if (!(await isPortOpen(port))) {
+    await launchChrome(port);
   }
-  console.log(`[Browser] Connecting to Chrome at ${CDP_URL}...`);
-  return chromium.connectOverCDP(CDP_URL);
+  console.log(`[Browser] Connecting to Chrome at http://localhost:${port}...`);
+  return chromium.connectOverCDP(`http://localhost:${port}`);
 }
 
 export async function closeBrowser(browser: Browser | null): Promise<void> {

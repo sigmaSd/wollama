@@ -1,6 +1,9 @@
 {
   "name": "@sigmasd/wollama",
-  "exports": "./main.ts",
+  "exports": {
+    ".": "./main.ts",
+    "./gemini/chat": "./gemini-chat.ts"
+  },
   "version": "0.8.0",
   "license": "MIT"
 }

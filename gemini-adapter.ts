@@ -43,23 +43,27 @@ export class GeminiAdapter {
   private page: Page | null = null;
   private isReady = false;
 
-  async ensureReady() {
+  async ensureReady(options: { port?: number; newTab?: boolean } = {}) {
     if (this.isReady && this.page) return;
 
-    this.browser = await ensureBrowser();
+    const port = options.port || 9222;
+    this.browser = await ensureBrowser(port);
 
     const contexts = this.browser.contexts();
     if (contexts.length === 0) throw new Error("No browser context found");
     this.context = contexts[0];
 
     const pages = this.context.pages();
-    const geminiPage = pages.find((p) => p.url().includes("gemini.google.com"));
+    const geminiPage = options.newTab
+      ? null
+      : pages.find((p) => p.url().includes("gemini.google.com"));
 
     if (geminiPage) {
       console.log("[Gemini] Found existing Gemini tab.");
       this.page = geminiPage;
     } else {
-      this.page = pages[0] || (await this.context.newPage());
+      console.log("[Gemini] Opening new Gemini tab...");
+      this.page = await this.context.newPage();
     }
 
     this.page.setDefaultTimeout(0);
