@@ -83,9 +83,9 @@ Start the proxy server:
 ```bash
 deno run -A jsr:@sigmasd/wollama
 # or
-npx xjsr @sigmasd/wollama
+npx rjsr @sigmasd/wollama
 # or
-bunx xjsr @sigmasd/wollama
+bunx rjsr @sigmasd/wollama
 ```
 
 3. Usage
