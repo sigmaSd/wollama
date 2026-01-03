@@ -4,6 +4,6 @@
     ".": "./main.ts",
     "./gemini/chat": "./gemini-chat.ts"
   },
-  "version": "0.9.1",
+  "version": "0.10.0",
   "license": "MIT"
 }

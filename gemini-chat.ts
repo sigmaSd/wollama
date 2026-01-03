@@ -30,6 +30,10 @@ const { values, positionals } = parseArgs({
       type: "boolean",
       short: "n",
     },
+    "keep-alive": {
+      type: "boolean",
+      short: "k",
+    },
   },
   allowPositionals: true,
 });
@@ -52,6 +56,7 @@ Options:
   -f, --file <path>     File(s) to upload (can be used multiple times)
   -q, --quiet           Only output the model response
   -n, --new-tab         Open a new tab instead of reusing an existing one
+  -k, --keep-alive      Keep the browser open after the chat is done
   --port <number>       Browser remote debugging port (default: 9222)
   -h, --help            Show this help message
 
@@ -105,6 +110,8 @@ try {
   process.stderr.write(`Error: ${error}\n`);
   process.exit(1);
 } finally {
-  await adapter.close();
+  if (!values["keep-alive"]) {
+    await adapter.close();
+  }
   process.exit(0);
 }
