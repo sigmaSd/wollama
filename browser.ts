@@ -4,6 +4,7 @@ import { ChildProcess, spawn } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 
 let chromeProcess: ChildProcess | null = null;
 let launchedByUs = false;
@@ -26,16 +27,25 @@ export async function isPortOpen(port = 9222): Promise<boolean> {
 export async function launchChrome(port = 9222): Promise<void> {
   console.log(`[Browser] Chrome not found on port ${port}, launching...`);
 
-  const chromePaths = [
-    "google-chrome",
-    "google-chrome-stable",
-    "/usr/bin/google-chrome",
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-    "chromium",
-    "chromium-browser",
-  ];
+  const chromePaths: string[] = [];
+  if (process.platform === "linux") {
+    chromePaths.push(
+      "google-chrome",
+      "google-chrome-stable",
+      "/usr/bin/google-chrome",
+      "chromium",
+      "chromium-browser",
+    );
+  } else if (process.platform === "darwin") {
+    chromePaths.push(
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    );
+  } else if (process.platform === "win32") {
+    chromePaths.push(
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+    );
+  }
 
   const args = [
     `--remote-debugging-port=${port}`,
