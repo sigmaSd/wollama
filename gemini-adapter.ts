@@ -1,6 +1,10 @@
 // gemini-adapter.ts - Playwright automation for Google Gemini
 import { Browser, BrowserContext, Page } from "npm:playwright@1.56.1";
-import { closeBrowser, ensureBrowser } from "./browser.ts";
+import {
+  closeBrowser,
+  ensureBrowser,
+  setUseDefaultProfile,
+} from "./browser.ts";
 import TurndownService from "npm:turndown@7.2.2";
 
 // Initialize Turndown with fenced code blocks
@@ -43,8 +47,14 @@ export class GeminiAdapter {
   private page: Page | null = null;
   private isReady = false;
 
-  async ensureReady(options: { port?: number; newTab?: boolean } = {}) {
+  async ensureReady(
+    options: { port?: number; newTab?: boolean; defaultProfile?: boolean } = {},
+  ) {
     if (this.isReady && this.page) return;
+
+    if (options.defaultProfile !== undefined) {
+      setUseDefaultProfile(options.defaultProfile);
+    }
 
     const port = options.port || 9222;
     this.browser = await ensureBrowser(port);

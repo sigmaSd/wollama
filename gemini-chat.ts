@@ -34,6 +34,9 @@ const { values, positionals } = parseArgs({
       type: "boolean",
       short: "k",
     },
+    "default-profile": {
+      type: "boolean",
+    },
   },
   allowPositionals: true,
 });
@@ -57,6 +60,7 @@ Options:
   -q, --quiet           Only output the model response
   -n, --new-tab         Open a new tab instead of reusing an existing one
   -k, --keep-alive      Keep the browser open after the chat is done
+  --default-profile     Use the default Chrome profile instead of a temporary one
   --port <number>       Browser remote debugging port (default: 9222)
   -h, --help            Show this help message
 
@@ -98,6 +102,7 @@ try {
   await adapter.ensureReady({
     port: values.port ? parseInt(values.port) : undefined,
     newTab: values["new-tab"],
+    defaultProfile: values["default-profile"],
   });
   const response = await adapter.sendMessage(prompt, absFiles);
   if (values.quiet) {
