@@ -93,7 +93,7 @@ export class GeminiAdapter {
     if (options.ensureSignedIn) {
       try {
         const signInButton = this.page.locator(
-          "a[href*='accounts.google.com'], [aria-label*='Sign in']",
+          "a[href*='accounts.google.com/ServiceLogin'], a[href*='accounts.google.com/signin'], [aria-label='Sign in']",
         ).first();
         // Short timeout to check for visibility without waiting too long
         await signInButton.waitFor({ state: "visible", timeout: 2000 });

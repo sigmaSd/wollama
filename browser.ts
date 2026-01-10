@@ -64,10 +64,27 @@ export async function launchChrome(port = 9222): Promise<void> {
     try {
       chromeProcess = spawn(chromePath, args, {
         detached: true,
-        stdio: "ignore",
+        stdio: ["ignore", "ignore", "pipe"],
+      });
+
+      let lockErrorDetected = false;
+      chromeProcess.stderr?.on("data", (data) => {
+        const output = data.toString();
+        if (
+          output.includes("SingletonLock") ||
+          output.includes("profile appears to be in use")
+        ) {
+          lockErrorDetected = true;
+        }
       });
 
       for (let i = 0; i < 30; i++) {
+        if (lockErrorDetected) {
+          chromeProcess.kill();
+          throw new Error(
+            "Chrome profile lock is corrupted or in use. Please manually clean up the lock file.",
+          );
+        }
         await new Promise((r) => setTimeout(r, 500));
         if (await isPortOpen(port)) {
           console.log(
@@ -78,8 +95,14 @@ export async function launchChrome(port = 9222): Promise<void> {
         }
       }
       chromeProcess.kill();
-    } catch {
-      // Path not found, try next
+    } catch (e) {
+      if (
+        e instanceof Error &&
+        e.message.includes("Chrome profile lock is corrupted")
+      ) {
+        throw e;
+      }
+      // Path not found or other error, try next
     }
   }
 
