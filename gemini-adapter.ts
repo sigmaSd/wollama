@@ -48,7 +48,12 @@ export class GeminiAdapter {
   private isReady = false;
 
   async ensureReady(
-    options: { port?: number; newTab?: boolean; defaultProfile?: boolean } = {},
+    options: {
+      port?: number;
+      newTab?: boolean;
+      defaultProfile?: boolean;
+      ensureSignedIn?: boolean;
+    } = {},
   ) {
     if (this.isReady && this.page) return;
 
@@ -83,6 +88,22 @@ export class GeminiAdapter {
       await this.page.goto("https://gemini.google.com/app", {
         waitUntil: "domcontentloaded",
       });
+    }
+
+    if (options.ensureSignedIn) {
+      try {
+        const signInButton = this.page.locator(
+          "a[href*='accounts.google.com'], [aria-label*='Sign in']",
+        ).first();
+        // Short timeout to check for visibility without waiting too long
+        await signInButton.waitFor({ state: "visible", timeout: 2000 });
+        throw new Error("Sign in required (detected sign-in button).");
+      } catch (e) {
+        if (e instanceof Error && e.message.includes("Sign in required")) {
+          throw e;
+        }
+        // If timeout occurs, it means sign in button wasn't found, which is good.
+      }
     }
 
     console.log("[Gemini] Waiting for chat interface...");
